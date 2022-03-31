@@ -1,17 +1,26 @@
+import ballerinax/covid19;
+import ballerina/log;
 import ballerina/http;
+
+# Status of the country
+type CountryStatus record {
+    string country;
+    decimal activeCases;
+};
 
 # A service representing a network-accessible API
 # bound to port `9090`.
 service / on new http:Listener(9090) {
 
-    # A resource for generating greetings
-    # + name - the input string name
-    # + return - string name with hello message or error
-    resource function get greeting(string name) returns string|error {
-        // Send a response back to the caller.
-        if name is "" {
-            return error("name should not be empty!");
-        }
-        return "Hello, " + name;
+    # Provides country information
+    # + return - country information 
+    resource function get status/[string countryCode]() returns CountryStatus| error? {
+
+        log:printInfo("new request: " + countryCode);
+        covid19:Client covid19Endpoint = check new ({});
+        covid19:CovidCountry getStatusByCountryResponse = check covid19Endpoint->getStatusByCountry(countryCode);
+        CountryStatus status = {country: countryCode, activeCases: getStatusByCountryResponse.active};
+
+        return status;
     }
 }
